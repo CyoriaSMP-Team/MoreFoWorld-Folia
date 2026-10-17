@@ -19,6 +19,14 @@ import java.util.List;
 import java.util.Map;
 
 public final class MoreFoWorld extends BasePlugin {
+    public World createWorld(WorldCreator creator) {
+        WorldUtil.FeedbackWorld result = WorldUtil.addWorld(creator);
+        if (result.feedback() != WorldUtil.Feedback.SUCCESS) {
+            throw new IllegalStateException("World creation failed: " + result.feedback());
+        }
+        return result.world();
+    }
+
     @Override
     protected List<Object> getComponents() {
         return List.of(
