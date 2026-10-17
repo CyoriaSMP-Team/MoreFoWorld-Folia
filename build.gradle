@@ -2,14 +2,15 @@ import io.papermc.paperweight.userdev.ReobfArtifactConfiguration
 
 plugins {
     id 'java'
-    id 'io.papermc.paperweight.userdev' version '2.0.0-beta.19'
-    id 'com.gradleup.shadow' version '8.3.9'
+    id 'io.papermc.paperweight.userdev' version '2.0.0-beta.24'
+    id 'com.gradleup.shadow' version '9.6.1'
+    id 'xyz.jpenilla.run-paper' version '3.1.0'
 }
 
 group = 'me.hsgamer'
-version = '1.13.3'
+version = '1.17.0'
 def snapshot = false
-description = 'A (temporary) world manager for Folia'
+description = 'A preference world manager for Folia'
 
 if (snapshot) {
     version = version + "-SNAPSHOT"
@@ -20,9 +21,9 @@ if (!versionFile.exists()) {
     throw new GradleException("version file not found")
 }
 def serverVersion = versionFile.text.trim()
-def majorServerVersion = serverVersion.count('.') > 1 ? serverVersion.substring(0, serverVersion.lastIndexOf('.')) : serverVersion
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven {
         name = "folia-inquistors-repo"
@@ -46,21 +47,32 @@ paperweight {
     paperweight.setReobfArtifactConfiguration(ReobfArtifactConfiguration.getMOJANG_PRODUCTION())
 }
 
+configurations.configureEach {
+    resolutionStrategy.capabilitiesResolution.withCapability("com.destroystokyo.paper:paper-mojangapi") {
+        select(candidates.first())
+    }
+}
+
 dependencies {
-    paperweight.foliaDevBundle("$serverVersion-R0.1-SNAPSHOT")
+    paperweight.foliaDevBundle("${serverVersion}.local-SNAPSHOT")
 
     def core = "4.5.7"
     implementation "me.hsgamer:hscore-bukkit-config:$core"
     implementation "me.hsgamer:hscore-bukkit-utils:$core"
     implementation "me.hsgamer:hscore-config-proxy:$core"
     implementation "me.hsgamer:hscore-common:$core"
+    implementation "me.hsgamer:hscore-task:$core"
 
     def minelib = "1.2.5"
     implementation "io.github.projectunified:minelib-plugin-base:$minelib"
     implementation "io.github.projectunified:minelib-plugin-listener:$minelib"
     implementation "io.github.projectunified:minelib-plugin-permission:$minelib"
-    implementation "io.github.projectunified:minelib-plugin-command:$minelib"
-    implementation "io.github.projectunified:minelib-util-subcommand:$minelib"
+
+    def craftcommand = "0.10.0"
+    compileOnly "io.github.projectunified:craftcommand-annotations:$craftcommand"
+    compileOnly "io.github.projectunified:craftcommand-bukkit-annotations:$craftcommand"
+    implementation "io.github.projectunified:craftcommand-paper-runtime:$craftcommand"
+    annotationProcessor "io.github.projectunified:craftcommand-paper-processor:$craftcommand"
 }
 
 assemble {
@@ -70,10 +82,11 @@ assemble {
 shadowJar {
     relocate("me.hsgamer.hscore", "me.hsgamer.morefoworld.core")
     relocate("io.github.projectunified.minelib", "me.hsgamer.morefoworld.minelib")
+    relocate("io.github.projectunified.craftcommand", "me.hsgamer.morefoworld.craftcommand")
     minimize()
 }
 
-def targetJavaVersion = 21
+def targetJavaVersion = 25
 java {
     def javaVersion = JavaVersion.toVersion(targetJavaVersion)
     sourceCompatibility = javaVersion
@@ -93,7 +106,7 @@ processResources {
     def props = [
             version    : version,
             name       : project.name,
-            apiVersion : majorServerVersion,
+            apiVersion : serverVersion,
             description: project.description
     ]
     inputs.properties props

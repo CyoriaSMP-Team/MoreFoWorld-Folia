@@ -14,6 +14,7 @@ public final class Permissions extends PermissionComponent {
     public static final Permission LINK_RESPAWN = new Permission("morefoworld.linkrespawn", PermissionDefault.OP);
     public static final Permission SET_SPAWN = new Permission("morefoworld.setspawn", PermissionDefault.OP);
     public static final Permission SET_WORLD_SPAWN = new Permission("morefoworld.setworldspawn", PermissionDefault.OP);
+    public static final Permission LOAD = new Permission("morefoworld.load", PermissionDefault.OP);
 
     public Permissions(BasePlugin plugin) {
         super(plugin);

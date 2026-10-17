@@ -1,8 +1,11 @@
 # MoreFoWorld
 
-A (temporary) world manager for Folia
+A reference world manager for Folia
 
-_Why does this even exist ??_
+## Why is it a reference world manager?
+
+This plugin was created sorely as a demonstration to see whether it's possible to add customized worlds in Folia aside from the default worlds. 
+This plugin doesn't claim to be a full-fledged world manager like others such as [Multiverse Core](https://modrinth.com/plugin/multiverse-core) or [Worlds](https://modrinth.com/plugin/worlds-1), but rather a reference plugin for other plugins to check, tweak and implement the logic on their own.
 
 ## Hacky Patch
 
@@ -26,3 +29,5 @@ _Why does this even exist ??_
 | `/mfw unlinkrespawn <world>`                          | `morefoworld.linkrespawn`     | Un-link Respawn points of a `world`                |
 | `/mfw setspawn`                                       | `morefoworld.setspawn`        | Set the spawn point when a player joins the server |
 | `/mfw setworldspawn`                                  | `morefoworld.setworldspawn`   | Set the spawn point of the current world           |
+| `/mfw load <world>`                                   | `morefoworld.load`            | Load a world                                       |
+| `/mfw unload <world>`                                 | `morefoworld.load`            | Unload a world                                     |
