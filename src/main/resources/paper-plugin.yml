@@ -6,3 +6,9 @@ load: POSTWORLD
 authors: [ HSGamer ]
 description: '${description}'
 folia-supported: true
+dependencies:
+  server:
+    CMI:
+      load: AFTER
+      required: false
+      join-classpath: false
