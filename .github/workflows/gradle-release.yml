@@ -14,12 +14,26 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Generate changelog
         id: changelog
-        uses: metcalfc/changelog-generator@v4.3.0
-        with:
-          myToken: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          previous_tag="$(git describe --tags --abbrev=0 "${GITHUB_SHA}^" 2>/dev/null || true)"
+          if [ -n "$previous_tag" ]; then
+            changelog="$(git log --no-merges --format='- %s' "${previous_tag}..${GITHUB_SHA}")"
+          else
+            changelog="$(git log -10 --no-merges --format='- %s' "$GITHUB_SHA")"
+          fi
+          if [ -z "$changelog" ]; then
+            changelog="Maintenance release ${GITHUB_REF_NAME}."
+          fi
+          {
+            echo 'changelog<<CHANGELOG_EOF'
+            printf '%s\n' "$changelog"
+            echo 'CHANGELOG_EOF'
+          } >> "$GITHUB_OUTPUT"
       - name: Read version
         id: version
         run: |
