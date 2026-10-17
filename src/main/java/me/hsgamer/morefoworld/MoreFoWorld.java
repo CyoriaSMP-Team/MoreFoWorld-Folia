@@ -1,13 +1,15 @@
 package me.hsgamer.morefoworld;
 
+import io.github.projectunified.craftcommand.paper.PaperCommandManager;
 import io.github.projectunified.minelib.plugin.base.BasePlugin;
-import io.github.projectunified.minelib.plugin.command.CommandComponent;
 import me.hsgamer.hscore.bukkit.config.BukkitConfig;
 import me.hsgamer.hscore.bukkit.utils.MessageUtils;
 import me.hsgamer.hscore.config.proxy.ConfigGenerator;
-import me.hsgamer.morefoworld.command.MainCommand;
 import me.hsgamer.morefoworld.config.*;
 import me.hsgamer.morefoworld.config.object.Position;
+import me.hsgamer.morefoworld.initializer.CanvasWorldInitializer;
+import me.hsgamer.morefoworld.initializer.FoliaWorldInitializer;
+import me.hsgamer.morefoworld.initializer.WorldInitializer;
 import me.hsgamer.morefoworld.listener.PortalListener;
 import me.hsgamer.morefoworld.listener.RespawnListener;
 import me.hsgamer.morefoworld.listener.SpawnListener;
@@ -17,6 +19,7 @@ import org.bukkit.WorldCreator;
 
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
 public final class MoreFoWorld extends BasePlugin {
     @Override
@@ -31,31 +34,34 @@ public final class MoreFoWorld extends BasePlugin {
                 new PortalListener(this),
                 new RespawnListener(this),
                 new SpawnListener(this),
-                new CommandComponent(this, () -> List.of(new MainCommand(this)))
+                new PaperCommandManager(this, (sender, exception) -> MessageUtils.sendMessage(sender.getSender(), "&c" + exception.getMessage())),
+                CanvasWorldInitializer.isAvailable() ? new CanvasWorldInitializer() : new FoliaWorldInitializer()
         );
     }
 
     @Override
     public void load() {
         MessageUtils.setPrefix("&8[&6MoreFoWorld&8] &r");
+        get(PaperCommandManager.class).register(new Commands(this));
     }
 
     @Override
     public void enable() {
+        WorldInitializer initializer = get(WorldInitializer.class);
         for (WorldSetting worldSetting : get(MainConfig.class).getWorldSettings()) {
             WorldCreator worldCreator = worldSetting.toWorldCreator();
-            WorldUtil.FeedbackWorld feedbackWorld = WorldUtil.addWorld(worldCreator);
-            if (feedbackWorld.feedback() == WorldUtil.Feedback.SUCCESS) {
+            WorldInitializer.FeedbackWorld feedbackWorld = initializer.addWorld(worldCreator).join();
+            if (feedbackWorld.feedback() == WorldInitializer.Feedback.SUCCESS) {
                 getLogger().info("World " + worldSetting.getName() + " is added");
             } else {
-                getLogger().warning("World " + worldSetting.getName() + " is not added: " + feedbackWorld.feedback());
+                getLogger().log(Level.WARNING, "World " + worldSetting.getName() + " is not added: " + feedbackWorld.feedback(), feedbackWorld.throwable());
             }
         }
 
         for (Map.Entry<String, Position> spawnEntry : get(WorldSpawnConfig.class).getSpawn().entrySet()) {
             World world = Bukkit.getWorld(spawnEntry.getKey());
             if (world == null) return;
-            WorldUtil.applyWorldSpawn(spawnEntry.getValue().toLocation(world));
+            initializer.applyWorldSpawn(spawnEntry.getValue().toLocation(world));
         }
     }
 }
